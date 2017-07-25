@@ -1,12 +1,12 @@
 <template>
     <div class="recommend">
-        <scroll class="recommend-content" :data="discList">
+        <scroll ref="scroll" class="recommend-content" :data="discList">
             <div>
                 <div v-if="recommends.length" class="slider-wrapper">
                     <Slider>
                         <div v-for="item in recommends">
                             <a :href="item.linkUrl">
-                                <img :src="item.picUrl">
+                                <img class="needsclick" @load="loadImage" :src="item.picUrl">
                             </a>
                         </div>
                     </Slider>
@@ -16,7 +16,7 @@
                     <ul>
                         <li v-for="item in discList" class="item">
                             <div class="icon">
-                                <img width="60" height="60" :src="item.imgurl" alt="">
+                                <img width="60" height="60" v-lazy="item.imgurl">
                             </div>
                             <div class="text">
                                 <h2 class="name" v-html="item.creator.name"></h2>
@@ -26,11 +26,15 @@
                     </ul>
                 </div>
             </div>
+            <div class="loading-container" v-show="!discList.length">
+                <loading></loading>
+            </div>
         </scroll>
     </div>
 </template>
 
 <script>
+import Loading from 'base/loading/loading'
 import Scroll from 'base/scroll/scroll'
 import Slider from 'base/slider/slider'
 import {getRecommend, getDiscList} from 'api/recommend'
@@ -61,17 +65,24 @@ export default {
                     this.discList = res.data.list
                 }
             })
+        },
+        loadImage () {
+            if (!this.checkLoaded) {
+                this.$refs.scroll.refresh()
+                this.checkLoaded = true
+            }
         }
     },
     components: {
         Slider,
-        Scroll
+        Scroll,
+        Loading
     }
 }
 </script>
 
 <style lang="scss" scoped>
-@import "../../common/sass/variable.scss";
+@import "src/common/sass/variable.scss";
 .recommend {
     position: fixed;
     width: 100%;
@@ -120,12 +131,13 @@ export default {
                     }
                 }
             }
-            .loading-container {
-                position: absolute;
-                width: 100%;
-                top: 50%;
-                transform: translateY(-50%);
-            }
+            
+        }
+        .loading-container {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
         }
     }
 }
